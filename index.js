@@ -36,12 +36,22 @@ async function run() {
     // await client.db("admin").command({ ping: 1 });
 
 
-    const servicesCollection = client.db('serviceDB').collection('service')
+    const servicesCollection = client.db('serviceDB').collection('service');
+    const testimonialsCollection = client.db('serviceDB').collection('testimonials');
 
 // * get api for services
-
 app.get('/services',async(req,res)=> {
   const cursor = servicesCollection.find();
+  const result = await cursor.toArray();
+  res.send(result);
+})
+
+
+
+
+// *get api for testimonials
+app.get('/testimonials',async(req,res)=> {
+  const cursor = testimonialsCollection.find();
   const result = await cursor.toArray();
   res.send(result);
 })
