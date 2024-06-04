@@ -38,6 +38,8 @@ async function run() {
 
     const servicesCollection = client.db('serviceDB').collection('service');
     const testimonialsCollection = client.db('serviceDB').collection('testimonials');
+    const usersCollection = client.db('serviceDB').collection('users');
+
 
 // * get api for services
 app.get('/services',async(req,res)=> {
@@ -56,6 +58,21 @@ app.get('/testimonials',async(req,res)=> {
   res.send(result);
 })
 
+
+
+// !post api for user
+app.post('/users', async (req,res)=> {
+  const {name,email,role} = req.body;
+
+  const user = await usersCollection.findOne({email:email});
+  if (user) {
+    res.status(200).send('User already exists');
+  }else {
+    const user = { name,email,role}
+    const result = await usersCollection.insertOne(user);
+    res.send(result)
+  }
+})
 
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
