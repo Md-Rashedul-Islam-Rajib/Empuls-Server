@@ -62,17 +62,31 @@ app.get('/testimonials',async(req,res)=> {
 
 // !post api for user
 app.post('/users', async (req,res)=> {
-  const {name,email,role} = req.body;
+  const {name,email,role,image,bank_account_no,salary,designation} = req.body;
 
   const user = await usersCollection.findOne({email:email});
   if (user) {
     res.status(200).send('User already exists');
   }else {
-    const user = { name,email,role}
-    const result = await usersCollection.insertOne(user);
+    const userinfo = { name,email,role,image,bank_account_no,salary,designation}
+    const result = await usersCollection.insertOne(userinfo);
+    console.log(result)
     res.send(result)
+    
   }
 })
+
+
+// * get api for user info
+app.get('/users',async(req,res)=> {
+  const email = req.query.email
+  const query = { email : email};
+  const result = await usersCollection.findOne(query);
+  res.send(result);
+})
+
+
+
 
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
