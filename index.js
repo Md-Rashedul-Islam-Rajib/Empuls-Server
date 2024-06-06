@@ -39,6 +39,7 @@ async function run() {
     const servicesCollection = client.db('serviceDB').collection('service');
     const testimonialsCollection = client.db('serviceDB').collection('testimonials');
     const usersCollection = client.db('serviceDB').collection('users');
+    const workCollection = client.db('serviceDB').collection('work');
 
 
 // * get api for services
@@ -74,6 +75,14 @@ app.post('/users', async (req,res)=> {
     res.send(result)
     
   }
+})
+
+// ! post api for work-data
+app.post('/work-list', async (req,res)=> {
+  const workData = req.body;
+  const result = await workCollection.insertOne(workData);
+  console.log(result)
+  res.send(result)
 })
 
 
