@@ -89,12 +89,25 @@ app.post('/work-list', async (req,res)=> {
 // * get api for user info
 app.get('/users',async(req,res)=> {
   const email = req.query.email
-  const query = { email : email};
-  const result = await usersCollection.findOne(query);
-  res.send(result);
+  if(email){
+
+    const query = { email : email};
+    const result = await usersCollection.findOne(query);
+    res.send(result);
+  }else{
+    const result = await usersCollection.find().toArray();
+    res.send(result);
+  }
 })
 
-
+// * get api for work data
+app.get('/work-list', async(req,res)=> {
+  const email = req.query.email;
+  const query = { email : email};
+  const cursor =  workCollection.find(query).sort({ date: -1 });
+  const result = await cursor.toArray();
+  res.send(result);
+})
 
 
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
