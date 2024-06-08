@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -99,6 +99,24 @@ app.get('/users',async(req,res)=> {
     res.send(result);
   }
 })
+
+
+// ? put api for update verify status
+app.put('/users/:id',async (req,res)=>{
+  const id = req.params.id;
+  // const item = req.body.date;
+  console.log(id);
+  const filter = {_id : new ObjectId(id)};
+  const options = {upsert : true};
+  const updatedData = {
+    $set: {
+ isVerified: true
+ }
+  };
+  const result = await usersCollection.updateOne(filter,updatedData,options);
+  res.status(200).send(result);
+})
+
 
 // * get api for work data
 app.get('/work-list', async(req,res)=> {
