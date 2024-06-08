@@ -118,6 +118,22 @@ app.put('/users/:id',async (req,res)=>{
 })
 
 
+// ? patch api for update verify status
+app.patch('/users/:id',async (req,res)=>{
+  const id = req.params.id;
+  // const item = req.body.date;
+  console.log(id);
+  const filter = {_id : new ObjectId(id)};
+  const options = {upsert : true};
+  const updatedData = {
+    $set: {
+ role: "HR"
+ }
+  };
+  const result = await usersCollection.updateOne(filter,updatedData,options);
+  res.status(200).send(result);
+})
+
 // * get api for work data
 app.get('/work-list', async(req,res)=> {
   const email = req.query.email;
