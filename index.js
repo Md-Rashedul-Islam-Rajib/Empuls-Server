@@ -41,30 +41,31 @@ async function run() {
     const testimonialsCollection = client.db('serviceDB').collection('testimonials');
     const usersCollection = client.db('serviceDB').collection('users');
     const workCollection = client.db('serviceDB').collection('work');
+    const salaryCollection = client.db('serviceDB').collection('salary');
 
 
-            // jwt related api
-            app.post('/jwt', async(req,res)=>{
-              const user = req.body;
-              const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn: "6h"});
-              res.send({token});
-            });
+            // // jwt related api
+            // app.post('/jwt', async(req,res)=>{
+            //   const user = req.body;
+            //   const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn: "6h"});
+            //   res.send({token});
+            // });
 
-            // middlewares
-            const verifyToken = (req,res,next) => {
-              console.log("inside",req.headers);
-              if(!req.headers.authorization){
-                return res.status(401).send({message: 'Forbidden Access'})
-              }
-              const token = req.headers.authorization.split(' ')[1];
-              jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
-                if(err){
-                  return res.status(401).send({message: 'forbidden access'})
-                }
-                req.decoded = decoded;
-                next();
-              })
-            }
+            // // middlewares
+            // const verifyToken = (req,res,next) => {
+            //   console.log("inside",req.headers);
+            //   if(!req.headers.authorization){
+            //     return res.status(401).send({message: 'Forbidden Access'})
+            //   }
+            //   const token = req.headers.authorization.split(' ')[1];
+            //   jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
+            //     if(err){
+            //       return res.status(401).send({message: 'forbidden access'})
+            //     }
+            //     req.decoded = decoded;
+            //     next();
+            //   })
+            // }
 
 
 
@@ -104,11 +105,28 @@ app.post('/users', async (req,res)=> {
   }
 })
 
+// ! post api for payment
+app.post('/payment-history/:id',async (req,res)=>{
+  const id = req.params.id;
+ const {email,salary,month,year} = req.body.data;
+ console.log(email,salary,month,year);
+ const alreadyPaid = await salaryCollection.findOne({month: month, year:year});
+ if(alreadyPaid){
+  res.status(200).send("already paid for selected month")
+ }else {
+  const paymentinfo = {email,salary,month,year};
+  const result = await salaryCollection.insertOne(paymentinfo);
+  res.status(200).send(result)
+ }
+// const result = await salaryCollection.insertOne(newData);
+// res.status(200).send(result)
+})
+
+
 // ! post api for work-data
 app.post('/work-list', async (req,res)=> {
   const workData = req.body;
   const result = await workCollection.insertOne(workData);
-  console.log(result)
   res.send(result)
 })
 
@@ -116,17 +134,19 @@ app.post('/work-list', async (req,res)=> {
 // * get api for user info
 app.get('/users',async(req,res)=> {
   
-  const email = req.query.email
+  const email = req.query.email;
   if(email){
-
     const query = { email : email};
-    const result = await usersCollection.findOne(query);
-    res.send(result);
+    const result1 = await usersCollection.findOne(query);
+
+    res.send(result1);
   }else{
-    const result = await usersCollection.find().toArray();
-    res.send(result);
+    const result2 = await usersCollection.find().toArray();
+    res.send(result2);
   }
 })
+
+
 
 
 // ? put api for update verify status
@@ -163,10 +183,12 @@ app.patch('/users/:id',async (req,res)=>{
 })
 
 
-// ? patch api for update verify status
-app.patch('/users/:id',async (req,res)=>{
+
+// ? patch api for update hr status
+app.patch('/users/:id/HR',async (req,res)=>{
   const id = req.params.id;
-  // const item = req.body.date;
+  // const status = req.body.status;
+  // console.log(status)
   console.log(id);
   const filter = {_id : new ObjectId(id)};
   const options = {upsert : true};
