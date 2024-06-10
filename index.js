@@ -68,7 +68,7 @@ async function run() {
             }
 
 // get api for verify HR role
-app.get('/users/admin/:email', verifyToken, async (req,res)=> {
+app.get('/users/hr/:email', verifyToken, async (req,res)=> {
   const email = req.params.email;
   if(email !== req.decoded.email){
     return res.status(403).send({message: 'Unathorized Access'})
@@ -78,11 +78,26 @@ app.get('/users/admin/:email', verifyToken, async (req,res)=> {
   const user = await usersCollection.findOne(query);
   let HR = false;
   if(user){
-    admin = user?.role === 'HR';
+    HR = user?.role === 'HR';
   }
   res.send({HR})
 })
 
+// get api for verify admin role
+app.get('/users/admin/:email', verifyToken, async (req,res)=> {
+  const email = req.params.email;
+  if(email !== req.decoded.email){
+    return res.status(403).send({message: 'Unathorized Access'})
+  }
+
+  const query = {email:email};
+  const user = await usersCollection.findOne(query);
+  let admin = false;
+  if(user){
+    admin = user?.role === 'admin';
+  }
+  res.send({admin})
+})
 
 // !post api for user
 app.post('/users', async (req,res)=> {
