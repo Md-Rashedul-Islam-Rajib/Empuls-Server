@@ -44,31 +44,61 @@ async function run() {
     const salaryCollection = client.db('serviceDB').collection('salary');
 
 
-            // // jwt related api
-            // app.post('/jwt', async(req,res)=>{
-            //   const user = req.body;
-            //   const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn: "6h"});
-            //   res.send({token});
-            // });
+            // jwt related api
+            app.post('/jwt', async(req,res)=>{
+              const user = req.body;
+              const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn: "6h"});
+              res.send({token});
+            });
 
-            // // middlewares
-            // const verifyToken = (req,res,next) => {
-            //   console.log("inside",req.headers);
-            //   if(!req.headers.authorization){
-            //     return res.status(401).send({message: 'Forbidden Access'})
-            //   }
-            //   const token = req.headers.authorization.split(' ')[1];
-            //   jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
-            //     if(err){
-            //       return res.status(401).send({message: 'forbidden access'})
-            //     }
-            //     req.decoded = decoded;
-            //     next();
-            //   })
-            // }
+            // middlewares
+            const verifyToken = (req,res,next) => {
+              console.log("inside",req.headers);
+              if(!req.headers.authorization){
+                return res.status(401).send({message: 'Forbidden Access'})
+              }
+              const token = req.headers.authorization.split(' ')[1];
+              jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
+                if(err){
+                  return res.status(401).send({message: 'forbidden access'})
+                }
+                req.decoded = decoded;
+                next();
+              })
+            }
+
+// get api for verify HR role
+app.get('/users/admin/:email', verifyToken, async (req,res)=> {
+  const email = req.params.email;
+  if(email !== req.decoded.email){
+    return res.status(403).send({message: 'Unathorized Access'})
+  }
+
+  const query = {email:email};
+  const user = await usersCollection.findOne(query);
+  let HR = false;
+  if(user){
+    admin = user?.role === 'HR';
+  }
+  res.send({HR})
+})
 
 
+// !post api for user
+app.post('/users', async (req,res)=> {
+  const {name,email,role,image,bank_account_no,salary,designation} = req.body;
 
+  const user = await usersCollection.findOne({email:email});
+  if (user) {
+    res.status(200).send('User already exists');
+  }else {
+    const userinfo = { name,email,role,image,bank_account_no,salary,designation}
+    const result = await usersCollection.insertOne(userinfo);
+    console.log(result)
+    res.send(result)
+    
+  }
+})
 
 // * get api for services
 app.get('/services',async(req,res)=> {
@@ -89,21 +119,6 @@ app.get('/testimonials',async(req,res)=> {
 
 
 
-// !post api for user
-app.post('/users', async (req,res)=> {
-  const {name,email,role,image,bank_account_no,salary,designation} = req.body;
-
-  const user = await usersCollection.findOne({email:email});
-  if (user) {
-    res.status(200).send('User already exists');
-  }else {
-    const userinfo = { name,email,role,image,bank_account_no,salary,designation}
-    const result = await usersCollection.insertOne(userinfo);
-    console.log(result)
-    res.send(result)
-    
-  }
-})
 
 // ! post api for payment
 app.post('/payment-history/:id',async (req,res)=>{
