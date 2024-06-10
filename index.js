@@ -108,18 +108,17 @@ app.post('/users', async (req,res)=> {
 // ! post api for payment
 app.post('/payment-history/:id',async (req,res)=>{
   const id = req.params.id;
- const {email,salary,month,year} = req.body.data;
+ const {email,salary,month,year,name,employeeId} = req.body.data;
  console.log(email,salary,month,year);
  const alreadyPaid = await salaryCollection.findOne({month: month, year:year});
  if(alreadyPaid){
   res.status(200).send("already paid for selected month")
  }else {
-  const paymentinfo = {email,salary,month,year};
+  const paymentinfo = {email,salary,month,year,name,employeeId};
   const result = await salaryCollection.insertOne(paymentinfo);
   res.status(200).send(result)
  }
-// const result = await salaryCollection.insertOne(newData);
-// res.status(200).send(result)
+
 })
 
 
@@ -143,6 +142,21 @@ app.get('/users',async(req,res)=> {
   }else{
     const result2 = await usersCollection.find().toArray();
     res.send(result2);
+  }
+})
+
+//  * get api for payment info
+app.get('/payment-history', async (req,res)=>{
+  const email =req.query.email;
+  
+  if(email){
+    const query = {email : email};
+  
+    const result1 = await salaryCollection.find(query).toArray();
+    res.status(200).send(result1);
+  }else {
+    const result2 = await salaryCollection.find().toArray();
+    res.status(200).send(result2);
   }
 })
 
