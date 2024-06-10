@@ -55,23 +55,53 @@ async function run() {
             const verifyToken = (req,res,next) => {
               console.log("inside",req.headers);
               if(!req.headers.authorization){
-                return res.status(401).send({message: 'Forbidden Access'})
+                return res.status(401).send({message: 'Unauthorized Access'})
               }
               const token = req.headers.authorization.split(' ')[1];
               jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
                 if(err){
-                  return res.status(401).send({message: 'forbidden access'})
+                  return res.status(401).send({message: 'unauthorized access'})
                 }
                 req.decoded = decoded;
                 next();
               })
             }
+            
+            
+            // use verify hr after verify token
+            const verifyHR = async(req,res,next) => {
+              const email = req.decoded.email;
+              const query = {email : email};
+              const user = await usersCollection.findOne(query);
+              const isHR = user?.role === 'HR';
+              if(!isHR){
+                return res.status(403).send({message: 'forbidden access'});
+              }
+            next()
+            }
+
+
+            // use verify admin after verify token
+            const verifyAdmin = async (req,res,next) => {
+              const email = req.decoded.email;
+              const query = {email : email};
+              const user = await usersCollection.findOne(query);
+              const isAdmin = user?.role === 'admin';
+              if(!isAdmin){
+                return res.status(403).send({message: 'forbidden access'})
+              }
+              next()
+            }
+
+ 
+
+
 
 // get api for verify HR role
 app.get('/users/hr/:email', verifyToken, async (req,res)=> {
   const email = req.params.email;
   if(email !== req.decoded.email){
-    return res.status(403).send({message: 'Unathorized Access'})
+    return res.status(403).send({message: 'Forbidden Access'})
   }
 
   const query = {email:email};
@@ -87,7 +117,7 @@ app.get('/users/hr/:email', verifyToken, async (req,res)=> {
 app.get('/users/admin/:email', verifyToken, async (req,res)=> {
   const email = req.params.email;
   if(email !== req.decoded.email){
-    return res.status(403).send({message: 'Unathorized Access'})
+    return res.status(403).send({message: 'Forbidden Access'})
   }
 
   const query = {email:email};
