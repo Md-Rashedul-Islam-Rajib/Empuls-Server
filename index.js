@@ -164,6 +164,11 @@ async function run() {
       res.send(result);
     });
 
+    // * get api for message
+    app.get('/messages', async (req,res) => {
+      const result = await messageCollection.find().toArray();
+      return res.send(result)
+  })
     // * get api for services
     app.get("/services", async (req, res) => {
       const cursor = servicesCollection.find();
@@ -221,6 +226,37 @@ async function run() {
         return res.send(result2);
       }
     });
+
+  
+
+    // // * get api for verify employee info
+    // app.get("/users/employee", async (req, res) => {
+    //   const email = req.query.email;
+    //   if (email) {
+    //     const query = { email: email };
+    //     const result1 = await usersCollection.findOne(query);
+
+    //     return res.send(result1);
+    //   } else {
+    //     const result2 = await usersCollection.find().toArray();
+    //     return res.send(result2);
+    //   }
+    // });
+
+
+    // // * get api for verify HR info
+    // app.get("/users/hr", async (req, res) => {
+    //   const email = req.query.email;
+    //   if (email) {
+    //     const query = { email: email };
+    //     const result1 = await usersCollection.findOne(query);
+
+    //     return res.send(result1);
+    //   } else {
+    //     const result2 = await usersCollection.find().toArray();
+    //     return res.send(result2);
+    //   }
+    // });
 
     // * get api for work data
     app.get("/work-list", async (req, res) => {
@@ -336,3 +372,9 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`server running from ${port}`);
 });
+
+
+
+// role base route loading then redirect login page 
+// couldn't filter only employee name and hr name
+// fired account prevent from login
