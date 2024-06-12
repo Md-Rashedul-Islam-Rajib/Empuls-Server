@@ -132,6 +132,22 @@ async function run() {
       res.send({ admin });
     });
 
+    // get api for verify employee role
+    app.get("/users/employee/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        employee = user?.role === "employee";
+      }
+      res.send({ employee });
+    });
+
     // !post api for user
     app.post("/users", async (req, res) => {
       const { name, email, role, image, bank_account_no, salary, designation } =
@@ -160,7 +176,6 @@ async function run() {
     app.post("/messages", async (req, res) => {
       const { email, message } = req.body;
       const result = await messageCollection.insertOne({ email, message });
-      console.log(result);
       res.send(result);
     });
 
@@ -181,6 +196,31 @@ async function run() {
       const cursor = testimonialsCollection.find();
       const result = await cursor.toArray();
       res.send(result);
+    });
+
+    // ? patch api for update salary
+    app.patch("/users/:id/salary", async (req, res) => {
+      const id = req.params.id;
+      const salary = req.body.data;
+      console.log(id,salary)
+      const filter = { _id: new ObjectId(id) };
+      const previousSalary = await usersCollection.findOne(filter);
+      if(previousSalary?.salary > salary){
+        return res.send({message : 'You can\'t reduce salary'})
+      }else{
+      const options = { upsert: true };
+      const updatedData = {
+        $set: {
+          salary: salary,
+        },
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updatedData,
+        options
+      );
+      return res.status(200).send(result);
+    }
     });
 
     // ! post api for payment
@@ -229,19 +269,19 @@ async function run() {
 
   
 
-    // // * get api for verify employee info
-    // app.get("/users/employee", async (req, res) => {
-    //   const email = req.query.email;
-    //   if (email) {
-    //     const query = { email: email };
-    //     const result1 = await usersCollection.findOne(query);
+    // * get api for verify employee info
+    app.get("users/employee/:email", async (req, res) => {
+      const email = req.params.email;
+      if (email) {
+        const query = { email: email };
+        const result1 = await usersCollection.findOne(query);
 
-    //     return res.send(result1);
-    //   } else {
-    //     const result2 = await usersCollection.find().toArray();
-    //     return res.send(result2);
-    //   }
-    // });
+        return res.send(result1);
+      } else {
+        const result2 = await usersCollection.find().toArray();
+        return res.send(result2);
+      }
+    });
 
 
     // // * get api for verify HR info
@@ -267,16 +307,12 @@ async function run() {
           .find(query)
           .sort({ date: -1 })
           .toArray();
-        console.log({ result1 });
         return res.send(result1);
       } else {
         const result2 = await workCollection.find().toArray();
         console.log({ result2 });
         return res.send(result2);
       }
-      // const cursor =  workCollection.find(query).sort({ date: -1 });
-      // const result = await cursor.toArray();
-      // res.send(result);
     });
 
     //  * get api for payment info
@@ -297,8 +333,6 @@ async function run() {
     // ? put api for update verify status
     app.put("/users/:id", async (req, res) => {
       const id = req.params.id;
-      // const item = req.body.date;
-      console.log(id);
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updatedData = {
@@ -317,8 +351,6 @@ async function run() {
     // ? put api for update employee fired status
     app.patch("/users/:id", async (req, res) => {
       const id = req.params.id;
-
-      console.log(id);
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updatedData = {
@@ -337,9 +369,6 @@ async function run() {
     // ? patch api for update hr status
     app.patch("/users/:id/HR", async (req, res) => {
       const id = req.params.id;
-      // const status = req.body.status;
-      // console.log(status)
-      console.log(id);
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updatedData = {
@@ -352,8 +381,10 @@ async function run() {
         updatedData,
         options
       );
-      res.status(200).send(result);
+      return res.status(200).send(result);
     });
+
+    
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
